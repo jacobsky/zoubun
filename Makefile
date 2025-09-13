@@ -6,6 +6,5 @@ build:
 	go build -o ${BINARY_CLI} cmd/cli/main.go
 
 serve:
-	build
-	go run ${BINARY_SERVER}
+	go run ./cmd/server/
 

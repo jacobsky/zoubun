@@ -1,13 +1,14 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"flag"
 	"log"
 	"net/http"
 	"os"
+
+	models "zoubun/internal"
 )
 
 var endpoint = "http://localhost:3000"
@@ -49,11 +50,14 @@ func index() {
 	}
 	defer resp.Body.Close()
 
-	log.Printf("Message of the day")
-	scanner := bufio.NewScanner(resp.Body)
-	for scanner.Scan() {
-		log.Println(scanner.Text())
+	var jsonOutput models.Motd
+
+	err = json.NewDecoder(resp.Body).Decode(&jsonOutput)
+	if err != nil {
+		panic(err)
 	}
+
+	log.Printf("Message of the day: %v", jsonOutput.Message)
 }
 
 func count() {
@@ -62,14 +66,14 @@ func count() {
 		panic(err)
 	}
 	defer resp.Body.Close()
-	var jsonOutput any
+	var jsonOutput models.Counter
 
 	err = json.NewDecoder(resp.Body).Decode(&jsonOutput)
 	if err != nil {
 		panic(err)
 	}
 
-	log.Printf("Count %v", jsonOutput)
+	log.Printf("Count %v", jsonOutput.Count)
 }
 
 func increment() {
@@ -82,12 +86,12 @@ func increment() {
 		panic(err)
 	}
 	defer resp.Body.Close()
-	var jsonOutput any
+	var jsonOutput models.Counter
 
 	err = json.NewDecoder(resp.Body).Decode(&jsonOutput)
 	if err != nil {
 		panic(err)
 	}
 
-	log.Printf("Incremented to %v", jsonOutput)
+	log.Printf("Incremented to %v", jsonOutput.Count)
 }
