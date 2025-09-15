@@ -17,7 +17,17 @@ services:
         condition: service_healthy
     networks:
       - zoubun-network
-
+  caddy:
+    image: caddy
+    container_name: zoubun-endpoint
+    ports:
+      - 80:80
+    volumes:
+      - caddy-config:/config
+      - caddy-data:/data
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      - zoubun-network
   postgres:
     image: postgres:bookworm
     restart: always
@@ -40,9 +50,24 @@ services:
       - pg-data:/var/lib/postgresql/data
     networks:
       - zoubun-network
+  # TODO: Add migrations service
+  migrate:
+    build:
+      context: ./migrations
+    container_name: zoubun-migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - zoubun-network
+    volumes:
+      - ./migrations/:/migrations
+    command: [tern migrate]
 
 volumes:
   pg-data:
+  caddy-config:
+  caddy-data:
 
 networks:
   zoubun-network:

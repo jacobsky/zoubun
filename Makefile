@@ -10,3 +10,6 @@ serve:
 	tern migrate
 	go run ./cmd/server/
 
+docker:
+	docker build . --platform=linus/amd64
+	docker build . --platform=linux/arm64

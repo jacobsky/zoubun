@@ -1,0 +1,4 @@
+# Ignore things that may interfere with builds.
+bin/
+.git/
+*.env
