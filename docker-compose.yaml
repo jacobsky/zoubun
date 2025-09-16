@@ -50,11 +50,12 @@ services:
       - pg-data:/var/lib/postgresql/data
     networks:
       - zoubun-network
-  # TODO: Add migrations service
+
   migrate:
-    build:
-      context: ./migrations
+    image: migrate/migrate
     container_name: zoubun-migrations
+    env_file:
+    - ./.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -62,7 +63,7 @@ services:
       - zoubun-network
     volumes:
       - ./migrations/:/migrations
-    command: [tern migrate]
+    command: ["-path", "/migrations", "-database", "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@zoubun-db/${POSTGRES_DB}?sslmode=disable", "up"]
 
 volumes:
   pg-data:

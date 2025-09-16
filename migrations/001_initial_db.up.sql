@@ -10,8 +10,3 @@ CREATE TABLE counters (
     current_count BIGINT,
     FOREIGN KEY (userid) REFERENCES users (id)
 );
-
----- create above / drop below ----
-
-DROP TABLE users;
-DROP TABLE counters;

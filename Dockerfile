@@ -1,3 +1,4 @@
+# TODO: Add dev build with `air` for hotreloading on dev
 FROM --platform=$BUILDPLATFORM golang:1.25 AS builder
 
 WORKDIR /build

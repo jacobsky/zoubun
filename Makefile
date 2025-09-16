@@ -7,9 +7,4 @@ build:
 	go build -o ${BINARY_CLI} cmd/cli/main.go
 
 serve:
-	tern migrate
-	go run ./cmd/server/
-
-docker:
-	docker build . --platform=linus/amd64
-	docker build . --platform=linux/arm64
+	docker-compose up --build
