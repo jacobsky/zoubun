@@ -1,3 +1,19 @@
+FROM --platform=$BUILDPLATFORM golang:1.25 AS dev
+
+WORKDIR /app
+
+# Set the GOPATH and include it in the PATH
+ENV GOPATH=/go
+ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
+
+RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \
+    go install github.com/air-verse/air@latest
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+ENTRYPOINT ["air", "-d"]
+
 # TODO: Add dev build with `air` for hotreloading on dev
 FROM --platform=$BUILDPLATFORM golang:1.25 AS builder
 
