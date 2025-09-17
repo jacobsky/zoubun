@@ -8,8 +8,12 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	models "zoubun/internal"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var currentCount = models.Counter{Count: 0}
@@ -49,16 +53,58 @@ func authorize(next http.Handler) http.Handler {
 	})
 }
 
+var httpRequestCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Name: "http_requests_total",
+	Help: "Total number of HTTP requests received",
+}, []string{"status", "path", "method"})
+
+type statusRecorder struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rec *statusRecorder) WriteHEader(code int) {
+	rec.statusCode = code
+	rec.ResponseWriter.WriteHeader(code)
+}
+
+func prometheusMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+		recorder := statusRecorder{
+			ResponseWriter: resp,
+			statusCode:     http.StatusOK,
+		}
+
+		next.ServeHTTP(recorder, req)
+
+		method := req.Method
+		path := req.URL.Path
+		status := strconv.Itoa(recorder.statusCode)
+
+		httpRequestCounter.WithLabelValues(status, path, method).Inc()
+	})
+}
+
 func main() {
 	// initialize the database here once the SQL is determined (should be easy)
 	// db := ?
 	// Initialize the routes
 	routes := http.NewServeMux()
-	routes.HandleFunc("GET /", index)
+	routes.HandleFunc("GET /index", index)
 	routes.HandleFunc("GET /count", count)
 	routes.HandleFunc("POST /increment", increment)
 	routes.HandleFunc("POST /register", register)
 	routes.HandleFunc("POST /verify", verify)
+
+	// This is specifically to handle all the emission of prometheus metrics for monitoring.
+	reg := prometheus.NewRegistry()
+	reg.MustRegister(httpRequestCounter)
+	handler := promhttp.HandlerFor(
+		reg, promhttp.HandlerOpts{},
+	)
+	routes.Handle("/metrics", handler)
+
+	promHandler := prometheusMiddleware(routes)
 	log.Print("serving at localhost:3000")
-	log.Panic(http.ListenAndServe(":3000", routes))
+	log.Panic(http.ListenAndServe(":3000", promHandler))
 }

@@ -7,7 +7,10 @@ build:
 	go build -o ${BINARY_CLI} cmd/cli/main.go
 
 dev:
-	docker-compose -f docker-compose.yaml -f docker-compose-dev.yaml up --build
+	docker-compose -f docker-compose.yaml -f docker-compose-dev.yaml up --build -d
+
+dev_down:
+	docker-compose -f docker-compose.yaml -f docker-compose-dev.yaml down
 
 prod:
 	docker-compose up --build
