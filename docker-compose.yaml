@@ -16,15 +16,19 @@ services:
       postgres:
         condition: service_healthy
     # Currently exposed for prometheus metrics
+    expose: 
+      - 3000
     # TODO: Remove without breaking prometheus metrics
-    ports:
-      - 3000:3000
+    # ports:
+    #   - 3000:3000
     networks:
       - zoubun-network
 
   caddy:
     image: caddy
     container_name: zoubun-endpoint
+    expose:
+      - 2019:2019
     ports:
       - 80:80
     volumes:
