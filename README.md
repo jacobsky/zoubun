@@ -20,14 +20,29 @@ POSTGRES_PASSWORD="hirake5ma"
 POSTGRES_USER="user"
 ```
 
-Run `docker-compose up`
+Run `make devu` to spin up the containers locally
+Run `make devd` to delete the containers
+
 
 ## Features In Development
 
-- [x] API
+- [ ] API
+    - [ ] /count
+    - [ ] /increment
+    - [ ] /motd to display a message of the day
+    - [ ] /register
+    - [ ] /verification
+    - [ ] /healthcheck
+    - [ ] etc...
 - [x] Containerized services
-- [ ] Hypermedia App
-- [ ] DB backed counting and registration
-- [ ] User Registration - Consider Discord OAuth for verification.
-- [ ] Contribution tracking page
-- [ ] Dedicated CLI
+- [x] Prometheus integration for metrics collection
+- [ ] Grafana local service for Development of observability
+- [ ] DB tasks
+    - [ ] Implement DB backing with postres/sqlc/migrate
+    - [ ] sqlc functions for each API request
+    - [x] migration service
+- [ ] Dedicated CLI implementing the API methods
+- [ ] Hypermedia based counting visualization
+- [ ] Configure Github actions to build the custom images and load them onto docker.
+- [ ] (Stretch goal) Add in simple email verification service to verify newly registered accounts
+- [ ] Make a companion repository to help facilitate deployment on a VPS

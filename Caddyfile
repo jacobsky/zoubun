@@ -13,18 +13,11 @@
     }
 }
 
+
 # External proxy
-# TODO: Add HTTPS proxy
 http://localhost { 
     handle {
         reverse_proxy zoubun-service:3000
-    }
-}
-
-
-http://localhost:2019 { 
-    handle {
-        reverse_proxy zoubun-endpoint:2019
     }
 }
 
@@ -37,7 +30,5 @@ http://zoubun-service {
 
 # For prometheus metrics to the caddy webserver
 http://zoubun-endpoint {
-    handle {
-        reverse_proxy zoubun-endpoint:2019
-    }
+    metrics /metrics
 }

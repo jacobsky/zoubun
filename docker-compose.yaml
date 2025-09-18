@@ -18,9 +18,6 @@ services:
     # Currently exposed for prometheus metrics
     expose: 
       - 3000
-    # TODO: Remove without breaking prometheus metrics
-    # ports:
-    #   - 3000:3000
     networks:
       - zoubun-network
 
@@ -28,9 +25,10 @@ services:
     image: caddy
     container_name: zoubun-endpoint
     expose:
-      - 2019:2019
+      - 2019
     ports:
       - 80:80
+      - 443:443
     volumes:
       - caddy-config:/config
       - caddy-data:/data

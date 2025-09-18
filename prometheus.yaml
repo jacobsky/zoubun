@@ -1,5 +1,8 @@
 global:
-  scrape_interval: 1m
+  scrape_interval: 15s
+  scrape_failure_log_file: fail_prom.log
+  query_log_file: query_prom.log
+
 
 scrape_configs:
   - job_name: counters
