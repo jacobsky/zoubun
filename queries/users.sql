@@ -8,3 +8,4 @@ UPDATE counters
 SET current_count=$2
 WHERE userid =$1
 RETURNING current_count;
+

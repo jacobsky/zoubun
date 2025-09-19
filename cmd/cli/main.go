@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	models "zoubun/internal"
+	"zoubun/internal/api"
 )
 
 var endpoint = "http://localhost:3000"
@@ -50,7 +50,7 @@ func index() {
 	}
 	defer resp.Body.Close()
 
-	var jsonOutput models.Motd
+	var jsonOutput api.Motd
 
 	err = json.NewDecoder(resp.Body).Decode(&jsonOutput)
 	if err != nil {
@@ -66,7 +66,7 @@ func count() {
 		panic(err)
 	}
 	defer resp.Body.Close()
-	var jsonOutput models.Counter
+	var jsonOutput api.Counter
 
 	err = json.NewDecoder(resp.Body).Decode(&jsonOutput)
 	if err != nil {
@@ -86,7 +86,7 @@ func increment() {
 		panic(err)
 	}
 	defer resp.Body.Close()
-	var jsonOutput models.Counter
+	var jsonOutput api.Counter
 
 	err = json.NewDecoder(resp.Body).Decode(&jsonOutput)
 	if err != nil {
