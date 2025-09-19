@@ -27,18 +27,19 @@ Run `make devd` to delete the containers
 ## Features In Development
 
 - [ ] API
-    - [ ] /count
-    - [ ] /increment
-    - [ ] /motd to display a message of the day
+    - [x] /count
+    - [x] /increment
+    - [x] /motd to display a message of the day
     - [ ] /register
     - [ ] /verification
     - [ ] /healthcheck
     - [ ] etc...
 - [x] Containerized services
 - [x] Prometheus integration for metrics collection
-- [ ] Grafana local service for Development of observability
+- [x] Grafana local service for observability dashboards
 - [ ] DB tasks
-    - [ ] Implement DB backing with postres/sqlc/migrate
+    - [ ] implement Schema
+    - [ ] API Key registration/management
     - [ ] sqlc functions for each API request
     - [x] migration service
 - [ ] Dedicated CLI implementing the API methods

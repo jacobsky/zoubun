@@ -32,4 +32,14 @@ services:
         limits:
           cpus: '0.1'
           memory: 1GB
+    # Grafana dashboards are preferred for actual monitoring and debugging, so this is only useful to confirm Caddy settings in dev.
+    ports:
+      - 9090:9090
 
+  grafana:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 1GB
+  

@@ -15,7 +15,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # Currently exposed for prometheus metrics
+    # Port used by prometheus metrics for querying
     expose: 
       - 3000
     networks:
@@ -95,16 +95,26 @@ services:
       - --web.enable-lifecycle
     expose:
       - 9090
-    ports:
-      - 9090:9090
     networks:
       - zoubun-network
 
+  grafana:
+    image: grafana/grafana-oss
+    container_name: grafana
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - zoubun-network
 volumes:
   pg-data:
   caddy-config:
   caddy-data:
   prometheus_data:
+  grafana_data:
 
 networks:
   zoubun-network:
