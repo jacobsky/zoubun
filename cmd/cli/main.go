@@ -2,51 +2,63 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"zoubun/internal/api"
+
+	"github.com/charmbracelet/bubbles/spinner"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	cli "github.com/urfave/cli/v3"
 )
 
 var endpoint = "http://localhost:3000"
 
 func main() {
-	motd := flag.NewFlagSet("motd", flag.ExitOnError)
-
-	incCmd := flag.NewFlagSet("increment", flag.ExitOnError)
-	countCmd := flag.NewFlagSet("count", flag.ExitOnError)
-
-	if len(os.Args) < 2 {
-		usage()
-		os.Exit(1)
+	motdCmd := &cli.Command{
+		Name:   "motd",
+		Usage:  "Display the server's message of the day",
+		Action: motd,
 	}
 
-	switch os.Args[1] {
-	case motd.Name():
-		index()
-	case incCmd.Name():
-		increment()
-	case countCmd.Name():
-		count()
-	default:
-		usage()
+	incCmd := &cli.Command{
+		Name:   "increment",
+		Usage:  "increment your count by 1",
+		Action: increment,
+	}
+	countCmd := &cli.Command{
+		Name:   "count",
+		Usage:  "Displays your current count",
+		Action: count,
+	}
+
+	tuiCmd := &cli.Command{
+		Name:   "tui",
+		Usage:  "Displays a terminal ui",
+		Action: tui,
+	}
+	cmd := &cli.Command{
+		Name:    "zbcli",
+		Version: "v0.0.1",
+		Usage:   "zbcli [command]",
+		Commands: []*cli.Command{
+			motdCmd, incCmd, countCmd, tuiCmd,
+		},
+	}
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
+		log.Fatal(err)
 	}
 }
 
-func usage() {
-	log.Print("USAGE: cli SUBCOMMAND")
-	log.Print("motd displays the message of the day")
-	log.Print("increment contributes towards the counting")
-	log.Print("count displays the current count")
-}
-
-func index() {
+func motd(ctx context.Context, cmd *cli.Command) error {
 	resp, err := http.Get(endpoint + "/")
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer resp.Body.Close()
 
@@ -54,44 +66,107 @@ func index() {
 
 	err = json.NewDecoder(resp.Body).Decode(&jsonOutput)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	log.Printf("Message of the day: %v", jsonOutput.Message)
+	fmt.Fprintf(cmd.Root().Writer, "Message of the day: %v", jsonOutput.Message)
+	return nil
 }
 
-func count() {
+func count(ctx context.Context, cmd *cli.Command) error {
 	resp, err := http.Get(endpoint + "/count")
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer resp.Body.Close()
 	var jsonOutput api.Counter
 
 	err = json.NewDecoder(resp.Body).Decode(&jsonOutput)
 	if err != nil {
-		panic(err)
+		return err
 	}
-
-	log.Printf("Count %v", jsonOutput.Count)
+	fmt.Fprintf(cmd.Root().Writer, "Count %v", jsonOutput.Count)
+	return nil
 }
 
-func increment() {
+func increment(ctx context.Context, cmd *cli.Command) error {
 	jsonData, err := json.Marshal("{}")
 	if err != nil {
-		panic(err)
+		return err
 	}
 	resp, err := http.Post(endpoint+"/increment", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer resp.Body.Close()
 	var jsonOutput api.Counter
 
 	err = json.NewDecoder(resp.Body).Decode(&jsonOutput)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	fmt.Fprintf(cmd.Root().Writer, "Incremented to %v", jsonOutput.Count)
+	return nil
+}
 
-	log.Printf("Incremented to %v", jsonOutput.Count)
+// Bubbletea based tui just to test and get the package.
+// TODO: Implement fully once the commands are refactored.
+type (
+	errMsg error
+	model  struct {
+		spinner  spinner.Model
+		quitting bool
+		err      error
+	}
+)
+
+func initialModel() model {
+	s := spinner.New()
+	s.Spinner = spinner.Dot
+	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	return model{spinner: s}
+}
+
+func (m model) Init() tea.Cmd {
+	return m.spinner.Tick
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "q", "esc", "ctrl+c":
+			m.quitting = true
+			return m, tea.Quit
+		default:
+			return m, nil
+		}
+	case errMsg:
+		m.err = msg
+		return m, nil
+
+	default:
+		var cmd tea.Cmd
+		m.spinner, cmd = m.spinner.Update(msg)
+		return m, cmd
+	}
+}
+
+func (m model) View() string {
+	if m.err != nil {
+		return m.err.Error()
+	}
+	str := fmt.Sprintf("\n\n	%s Loading forever...press q to quit\n\n", m.spinner.View())
+	if m.quitting {
+		return str + "\n"
+	}
+	return str
+}
+
+func tui(ctx context.Context, cmd *cli.Command) error {
+	p := tea.NewProgram(initialModel())
+	if _, err := p.Run(); err != nil {
+		return err
+	}
+	return nil
 }
