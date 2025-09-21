@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 
-	"zoubun/internal/api"
+	"zoubun/internal/routes"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -62,7 +62,7 @@ func motd(ctx context.Context, cmd *cli.Command) error {
 	}
 	defer resp.Body.Close()
 
-	var jsonOutput api.Motd
+	var jsonOutput routes.Motd
 
 	err = json.NewDecoder(resp.Body).Decode(&jsonOutput)
 	if err != nil {
@@ -79,7 +79,7 @@ func count(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 	defer resp.Body.Close()
-	var jsonOutput api.Counter
+	var jsonOutput routes.Counter
 
 	err = json.NewDecoder(resp.Body).Decode(&jsonOutput)
 	if err != nil {
@@ -99,7 +99,7 @@ func increment(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 	defer resp.Body.Close()
-	var jsonOutput api.Counter
+	var jsonOutput routes.Counter
 
 	err = json.NewDecoder(resp.Body).Decode(&jsonOutput)
 	if err != nil {
