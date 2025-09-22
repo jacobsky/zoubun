@@ -3,14 +3,17 @@ package routes
 
 import (
 	"net/http"
+
+	"zoubun/internal/middleware"
 )
 
 func ConfigureRoutes(s *Services) *http.ServeMux {
 	routes := http.NewServeMux()
 	routes.HandleFunc("GET /index", s.MessageOfTheDay)
 	routes.HandleFunc("GET /motd", s.MessageOfTheDay)
-	routes.HandleFunc("GET /{userid}/count/", s.Count)
-	routes.HandleFunc("PUT /{userid}/increment", s.Increment)
+	routes.Handle("GET /count", middleware.Authorize(http.HandlerFunc(s.Count)))
+	routes.Handle("POST /regenerate_key", middleware.Authorize(http.HandlerFunc(s.Count)))
+	routes.Handle("PUT /increment", middleware.Authorize(http.HandlerFunc(s.Increment)))
 	routes.HandleFunc("POST /register", s.Register)
 	routes.HandleFunc("GET /healthcheck", s.HealthCheck)
 

@@ -62,13 +62,13 @@ func (s *Services) MessageOfTheDay(resp http.ResponseWriter, req *http.Request) 
 }
 
 func (s *Services) Count(resp http.ResponseWriter, req *http.Request) {
-	resp.Header().Set("ContentType", "application/json")
+	resp.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(resp).Encode(currentCount)
 }
 
 func (s *Services) Increment(resp http.ResponseWriter, req *http.Request) {
 	currentCount.Count++
-	resp.Header().Set("ContentType", "application/json")
+	resp.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(resp).Encode(currentCount)
 }
 

@@ -32,15 +32,15 @@ Run `make devd` to delete the containers
     - [x] /motd to display a message of the day
     - [ ] /register
     - [ ] /verification
-    - [ ] /healthcheck
+    - [x] /healthcheck
     - [ ] etc...
 - [x] Containerized services
 - [x] Prometheus integration for metrics collection
 - [x] Grafana local service for observability dashboards
 - [ ] DB tasks
-    - [ ] implement Schema
+    - [x] implement Schema
     - [ ] API Key registration/management
-    - [ ] sqlc functions for each API request
+    - [x] sqlc functions for each API request
     - [x] migration service
 - [ ] Dedicated CLI implementing the API methods
 - [ ] Hypermedia based counting visualization
