@@ -12,18 +12,29 @@ import (
 	"net/http"
 	"os"
 
-	sqlc "zoubun/internal/db"
 	"zoubun/internal/middleware"
 	"zoubun/internal/routes"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
-	// initialize the database here once the SQL is determined (should be easy)
-	db, err := sql.Open("postgres", fmt.Sprintf("postgres://%v@%v@%v/%v", os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_DB"), os.Getenv("POSTGRES_PASSWORD"), os.Getenv("POSTGRES_USER")))
+	// Database initialization
+	db, err := sql.Open("postgres",
+		fmt.Sprintf("postgres://%v:%v@%v/%v?sslmode=disable",
+			os.Getenv("POSTGRES_USER"),
+			os.Getenv("POSTGRES_PASSWORD"),
+			os.Getenv("POSTGRES_HOST"),
+			os.Getenv("POSTGRES_DB"),
+		),
+	)
 	if err != nil {
 		panic(err)
 	}
-	services := routes.NewServices(sqlc.New(db))
+
+	defer db.Close()
+	services := routes.NewServices(db)
+	//
 	// Initialize the routes
 	routes := routes.ConfigureRoutes(services)
 	handler := middleware.ConfigureMiddleware(routes)

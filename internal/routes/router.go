@@ -7,11 +7,12 @@ import (
 
 func ConfigureRoutes(s *Services) *http.ServeMux {
 	routes := http.NewServeMux()
-	routes.HandleFunc("GET /index", s.Index)
-	routes.HandleFunc("GET /count", s.Count)
-	routes.HandleFunc("POST /increment", s.Increment)
+	routes.HandleFunc("GET /index", s.MessageOfTheDay)
+	routes.HandleFunc("GET /motd", s.MessageOfTheDay)
+	routes.HandleFunc("GET /{userid}/count/", s.Count)
+	routes.HandleFunc("PUT /{userid}/increment", s.Increment)
 	routes.HandleFunc("POST /register", s.Register)
-	routes.HandleFunc("POST /verify", s.Verify)
+	routes.HandleFunc("GET /healthcheck", s.HealthCheck)
 
 	// This is specifically to handle all the emission of prometheus metrics for monitoring.
 	return routes

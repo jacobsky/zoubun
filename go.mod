@@ -6,8 +6,8 @@ require (
 	github.com/charmbracelet/bubbles v0.21.0
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
+	github.com/lib/pq v1.10.9
 	github.com/prometheus/client_golang v1.23.2
-	github.com/sqlc-dev/pqtype v0.3.0
 	github.com/urfave/cli/v3 v3.4.1
 )
 
