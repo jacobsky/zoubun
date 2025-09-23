@@ -12,7 +12,7 @@ RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \
 COPY go.mod go.sum ./
 RUN go mod download
 
-ENTRYPOINT ["air", "-d"]
+ENTRYPOINT ["air", "-d", "-c", ".air.toml"]
 
 # TODO: Add dev build with `air` for hotreloading on dev
 FROM --platform=$BUILDPLATFORM golang:1.25 AS builder

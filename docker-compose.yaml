@@ -59,6 +59,8 @@ services:
     networks:
       - zoubun-network
 
+  # Note: This could also potentially be done via a custom script _inside_ the docker container
+  # This particular service is used for simplicity as it will be run once _per `docker-compose up`_ command
   migrate:
     image: migrate/migrate
     container_name: zoubun-migrations

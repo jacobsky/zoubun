@@ -27,9 +27,9 @@ CREATE TABLE user_challenge (
 -- stores the API keys
 CREATE TABLE user_keys (
     userid SERIAL,
-    apikey TEXT UNIQUE,
-    creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted BOOLEAN,
+    apikey1 TEXT UNIQUE,
+    apikey2 TEXT UNIQUE,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (userid) REFERENCES users (id)
 );
 
