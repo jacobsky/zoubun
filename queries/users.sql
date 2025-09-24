@@ -26,19 +26,29 @@ INSERT INTO counters (userid) SELECT created_user.id FROM created_user
 RETURNING userid;
 
 -- name: AddUserKey :exec
-INSERT INTO user_keys (userid, apikey1, apikey2) VALUES (sqlc.arg(userid)::int, sqlc.arg(apikey1)::text, sqlc.arg(apikey2)::text);
+INSERT INTO user_keys (userid, apikey1, apikey2) 
+VALUES (
+    sqlc.arg(userid)::int, 
+    digest(sqlc.arg(apikey1)::text, 'sha256'),
+    digest(sqlc.arg(apikey2)::text, 'sha256')
+);
 
 -- name: RotateUserKey1 :one
-UPDATE user_keys SET apikey1=sqlc.arg(new_key)::text WHERE userid=sqlc.arg(userid)::int RETURNING apikey1;
+UPDATE user_keys SET apikey1=digest(sqlc.arg(new_key)::text, 'sha256')
+WHERE userid=sqlc.arg(userid)::int RETURNING apikey1;
 --
 -- name: RotateUserKey2 :one
-UPDATE user_keys SET apikey2=sqlc.arg(new_key)::text WHERE userid=sqlc.arg(userid)::int RETURNING apikey2;
+UPDATE user_keys SET apikey2=apikey2=sqlc.arg(new_key)::text
+WHERE userid=sqlc.arg(userid)::int RETURNING apikey2;
 
 -- name: GetUserKey :one
 SELECT apikey1, apikey2 FROM user_keys WHERE userid=$1;
 
 -- name: GetUserIdFromAuth :one
-SELECT userid FROM user_keys WHERE apikey1=sqlc.arg(apikey)::text OR apikey2=sqlc.arg(apikey)::text;
+SELECT userid
+FROM user_keys
+WHERE apikey1=digest(sqlc.arg(apikey)::text, 'sha256')
+    OR apikey2=digest(sqlc.arg(apikey)::text, 'sha256');
 
 -- name: UsernameExists :one
-SELECT CASE WHEN username=$1::text THEN TRUE ELSE FALSE END AS Exists FROM users;
+SELECT EXISTS (SELECT * FROM users WHERE username=$1::text);

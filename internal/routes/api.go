@@ -156,6 +156,7 @@ func (s *Services) Register(resp http.ResponseWriter, req *http.Request) {
 		dbError(resp)
 		return
 	}
+
 	defer tx.Rollback()
 	qtx := s.queries.WithTx(tx)
 	userid, err := qtx.CreateUser(req.Context(), body.Username)
@@ -167,8 +168,6 @@ func (s *Services) Register(resp http.ResponseWriter, req *http.Request) {
 	apikey1 := uuid.New().String()
 	apikey2 := uuid.New().String()
 
-	// TODO: Hash these values _before_ putting them in and update the `Authorize` function to match
-	// Validate hashing algorithm
 	err = qtx.AddUserKey(req.Context(), sqlc.AddUserKeyParams{
 		Userid:  int32(userid.Int32),
 		Apikey1: apikey1,

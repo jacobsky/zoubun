@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- used to store arbitrary configuration values used by the server.
 CREATE TABLE config (
     config_key TEXT UNIQUE NOT NULL,
@@ -27,8 +29,8 @@ CREATE TABLE user_challenge (
 -- stores the API keys
 CREATE TABLE user_keys (
     userid SERIAL,
-    apikey1 TEXT UNIQUE,
-    apikey2 TEXT UNIQUE,
+    apikey1 BYTEA UNIQUE,
+    apikey2 BYTEA UNIQUE,
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (userid) REFERENCES users (id) ON DELETE CASCADE
 );
