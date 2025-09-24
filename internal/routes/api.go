@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/big"
 	"net/http"
 	"strconv"
 
@@ -19,14 +20,12 @@ type ErrorResponse struct {
 }
 
 type Counter struct {
-	Count int `json:"count"`
+	Count big.Int `json:"count"`
 }
 
 type Motd struct {
 	Message string `json:"message"`
 }
-
-var currentCount = Counter{Count: 0}
 
 type Services struct {
 	db      *sql.DB
@@ -71,14 +70,51 @@ func (s *Services) MessageOfTheDay(resp http.ResponseWriter, req *http.Request) 
 }
 
 func (s *Services) Count(resp http.ResponseWriter, req *http.Request) {
-	// TODO: Pull from the individual user and return _their_ counts only
+	userid := req.Header.Get("userid")
+	if userid == "" {
+		log.Print("/api/count somehow got a blank username from an authorization header")
+		processError(resp, 500, "Internal Server Error", "")
+		return
+	}
+	id, err := strconv.Atoi(userid)
+	if err != nil {
+		log.Print(err)
+		resp.WriteHeader(500)
+		return
+	}
+
+	currentCount, err := s.queries.GetUserCounter(req.Context(), int32(id))
+	if err != nil {
+		log.Print(err)
+		resp.WriteHeader(500)
+		return
+	}
+
 	resp.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(resp).Encode(currentCount)
 }
 
 func (s *Services) Increment(resp http.ResponseWriter, req *http.Request) {
-	// TODO: Pull from the individual user and increment (pulled from request header)
-	currentCount.Count++
+	userid := req.Header.Get("userid")
+	if userid == "" {
+		log.Print("/api/count somehow got a blank username from an authorization header")
+		processError(resp, 500, "Internal Server Error", "")
+		return
+	}
+	id, err := strconv.Atoi(userid)
+	if err != nil {
+		log.Print(err)
+		resp.WriteHeader(500)
+		return
+	}
+
+	currentCount, err := s.queries.IncrementCounter(req.Context(), int32(id))
+	if err != nil {
+		log.Print(err)
+		resp.WriteHeader(500)
+		return
+	}
+
 	resp.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(resp).Encode(currentCount)
 }

@@ -30,14 +30,14 @@ CREATE TABLE user_keys (
     apikey1 TEXT UNIQUE,
     apikey2 TEXT UNIQUE,
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (userid) REFERENCES users (id)
+    FOREIGN KEY (userid) REFERENCES users (id) ON DELETE CASCADE
 );
 
 -- User game progress
 CREATE TABLE counters (
     userid SERIAL,
     current_count BIGINT DEFAULT 0,
-    FOREIGN KEY (userid) REFERENCES users (id)
+    FOREIGN KEY (userid) REFERENCES users (id) ON DELETE CASCADE
 );
 
 

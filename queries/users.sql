@@ -3,16 +3,16 @@ SELECT config_value
 FROM config
 WHERE config_key = 'motd';
 
--- name: SelectCounter :one
-SELECT current_count
+-- name: GetUserCounter :one
+SELECT current_count::bigint
 FROM counters
-WHERE userid = $1;
+WHERE userid = sqlc.arg(userid)::int;
 
 -- name: IncrementCounter :one
 UPDATE counters
 SET current_count = current_count + 1
-WHERE userid = $1
-RETURNING current_count;
+WHERE userid = sqlc.arg(userid)::int
+RETURNING current_count::BIGINT;
 
 -- name: GetUserByName :one
 SELECT id, creation_date from USERS where username='$1';
@@ -41,4 +41,4 @@ SELECT apikey1, apikey2 FROM user_keys WHERE userid=$1;
 SELECT userid FROM user_keys WHERE apikey1=sqlc.arg(apikey)::text OR apikey2=sqlc.arg(apikey)::text;
 
 -- name: UsernameExists :one
-SELECT CASE WHEN username=$1::text THEN TRUE ELSE FALSE END AS Exists FROM users; 
+SELECT CASE WHEN username=$1::text THEN TRUE ELSE FALSE END AS Exists FROM users;
