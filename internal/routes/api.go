@@ -38,85 +38,54 @@ func NewServices(db *sql.DB) *Services {
 	}
 }
 
-// General handler for errors
-func processError(resp http.ResponseWriter, code int, message string, details ...string) {
-	resp.WriteHeader(code)
-	errResp := ErrorResponse{
-		Message: message,
-		Details: details,
-	}
-	json.NewEncoder(resp).Encode(errResp)
-}
-
-func dbError(resp http.ResponseWriter) {
-	processError(resp, 500, "Database error has occurred", "Please contact the admin with the request ID for more information")
-}
-
-func (s *Services) MessageOfTheDay(resp http.ResponseWriter, req *http.Request) {
+func (s *Services) MessageOfTheDay(resp http.ResponseWriter, req *http.Request) error {
 	message, err := s.queries.Motd(req.Context())
 	if err != nil {
-		log.Printf("Database Error %v", err.Error())
-		resp.WriteHeader(503)
-		errResp := ErrorResponse{
-			Message: "An internal database error has occurred. If this issue persists, please notify the administrators",
-		}
-		json.NewEncoder(resp).Encode(errResp)
-		return
+		// log.Printf("Database Error %v", err.Error())
+		return internalServerError()
 	}
 
 	motd := Motd{Message: message}
-	json.NewEncoder(resp).Encode(motd)
+	return writeJSON(resp, http.StatusOK, motd)
 }
 
-func (s *Services) Count(resp http.ResponseWriter, req *http.Request) {
+func (s *Services) Count(resp http.ResponseWriter, req *http.Request) error {
 	userid := req.Header.Get("userid")
 	if userid == "" {
 		log.Print("/api/count somehow got a blank username from an authorization header")
-		processError(resp, 500, "Internal Server Error", "")
-		return
+		return internalServerError()
 	}
 
 	id, err := strconv.Atoi(userid)
 	if err != nil {
-		log.Print(err)
-		resp.WriteHeader(500)
-		return
+		return internalServerError()
 	}
 
 	count, err := s.queries.GetUserCounter(req.Context(), int32(id))
 	if err != nil {
-		log.Print(err)
-		resp.WriteHeader(500)
-		return
+		return internalServerError()
 	}
 
-	resp.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(resp).Encode(Counter{Count: count})
+	return writeJSON(resp, http.StatusOK, Counter{Count: count})
 }
 
-func (s *Services) Increment(resp http.ResponseWriter, req *http.Request) {
+func (s *Services) Increment(resp http.ResponseWriter, req *http.Request) error {
 	userid := req.Header.Get("userid")
 	if userid == "" {
 		log.Print("/api/count somehow got a blank username from an authorization header")
-		processError(resp, 500, "Internal Server Error", "")
-		return
+		return internalServerError()
 	}
 	id, err := strconv.Atoi(userid)
 	if err != nil {
-		log.Print(err)
-		resp.WriteHeader(500)
-		return
+		return internalServerError()
 	}
 
 	count, err := s.queries.IncrementCounter(req.Context(), int32(id))
 	if err != nil {
-		log.Print(err)
-		resp.WriteHeader(500)
-		return
+		return internalServerError()
 	}
 
-	resp.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(resp).Encode(Counter{Count: count})
+	return writeJSON(resp, http.StatusOK, Counter{Count: count})
 }
 
 type RegisterRequestBody struct {
@@ -130,31 +99,27 @@ type RegisterResponseBody struct {
 	Message  string `json:"message"`
 }
 
-func (s *Services) Register(resp http.ResponseWriter, req *http.Request) {
+func (s *Services) Register(resp http.ResponseWriter, req *http.Request) error {
 	var body RegisterRequestBody
 	json.NewDecoder(req.Body).Decode(&body)
 	if len(body.Username) < 3 {
 		log.Print("Empty username")
-		processError(resp, 400, "Empty username", "Please select a username")
-		return
+		return NewAPIError(400, fmt.Errorf("empty username"), "Please select a username")
 	}
 	exists, err := s.queries.UsernameExists(req.Context(), body.Username)
 	if err != nil {
 		fmt.Printf("Database Error has Occurred: %v", err)
-		dbError(resp)
-		return
+		return internalServerError()
 	}
 
 	if exists {
 		log.Printf("Attempted to sign up with %v which already exists", body.Username)
-		processError(resp, 400, "Username already exists", "Please choose another username and attempt to register again")
-		return
+		return NewAPIError(400, fmt.Errorf("Username already exists"), "Your desired username is already in use. Please select another name and register again")
 	}
 	tx, err := s.db.Begin()
 	if err != nil {
 		log.Printf("Database Error has Occurred: %v", err)
-		dbError(resp)
-		return
+		return internalServerError()
 	}
 
 	defer tx.Rollback()
@@ -162,7 +127,7 @@ func (s *Services) Register(resp http.ResponseWriter, req *http.Request) {
 	userid, err := qtx.CreateUser(req.Context(), body.Username)
 	if err != nil || !userid.Valid {
 		log.Printf("userid [%v] is invalid and/or a database error occurred: %v", userid, err)
-		dbError(resp)
+		return internalServerError()
 	}
 	// Create the API keys using the UUID generator (could be other methods, this is just simple)
 	apikey1 := uuid.New().String()
@@ -175,13 +140,12 @@ func (s *Services) Register(resp http.ResponseWriter, req *http.Request) {
 	})
 	if err != nil {
 		log.Printf("Database Error: %v", err)
-		dbError(resp)
-		return
+		return internalServerError()
 	}
 	err = tx.Commit()
 	if err != nil {
 		log.Printf("Database Error: %v", err)
-		dbError(resp)
+		return internalServerError()
 	}
 	respBody := RegisterResponseBody{
 		Username: body.Username,
@@ -189,8 +153,8 @@ func (s *Services) Register(resp http.ResponseWriter, req *http.Request) {
 		APIKey2:  apikey2,
 		Message:  "Your key has been created, please be sure to save it.",
 	}
-	resp.WriteHeader(201)
-	json.NewEncoder(resp).Encode(respBody)
+
+	return writeJSON(resp, http.StatusCreated, respBody)
 }
 
 type RotateKeyRequestBody struct {
@@ -202,29 +166,26 @@ type RotateKeyResponseBody struct {
 	NewKey   string `json:"new_key"`
 }
 
-func (s *Services) RotateKey(resp http.ResponseWriter, req *http.Request) {
+func (s *Services) RotateKey(resp http.ResponseWriter, req *http.Request) error {
 	var body RotateKeyRequestBody
 	// Extract the username from the header that should be added by middleware
 	userid, err := strconv.Atoi(req.Header.Get("userId"))
 	if err != nil {
 		log.Printf("Fetching userid from headers resulted in %v", err)
-		processError(resp, 500, "Internal server error", "Please contact the admin with the request ID")
-		return
+		return internalServerError()
 	}
 	json.NewDecoder(req.Body).Decode(&body)
 	if body.WhichKey != 1 && body.WhichKey != 2 {
-		processError(resp,
+		return NewAPIError(
 			400,
-			"Key does not exist",
+			fmt.Errorf("Key does not exist"),
 			"Valid values for this request are 1 or 2 as there are only two keys per account",
 		)
-		return
 	}
 	tx, err := s.db.Begin()
 	if err != nil {
 		log.Printf("Database Error has Occurred: %v", err.Error())
-		dbError(resp)
-		return
+		return internalServerError()
 	}
 	defer tx.Rollback()
 	qtx := s.queries.WithTx(tx)
@@ -239,15 +200,13 @@ func (s *Services) RotateKey(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	if err != nil {
-		dbError(resp)
-		return
+		return internalServerError()
 	}
 	respBody := RotateKeyResponseBody{
 		WhichKey: body.WhichKey,
 		NewKey:   newkey,
 	}
-	resp.WriteHeader(201)
-	json.NewEncoder(resp).Encode(respBody)
+	return writeJSON(resp, http.StatusCreated, respBody)
 }
 
 func (s *Services) Verify(resp http.ResponseWriter, req *http.Request) {
@@ -259,7 +218,7 @@ type HealthCheckResponse struct {
 	Errors  []string `json:"errors"`
 }
 
-func (s *Services) HealthCheck(resp http.ResponseWriter, req *http.Request) {
+func (s *Services) HealthCheck(resp http.ResponseWriter, req *http.Request) error {
 	// Assume healthy to start, then add in errors
 
 	healthcheck := HealthCheckResponse{Message: "No issues", Errors: make([]string, 0)}
@@ -270,5 +229,5 @@ func (s *Services) HealthCheck(resp http.ResponseWriter, req *http.Request) {
 	if len(healthcheck.Errors) > 0 {
 		healthcheck.Message = "Service is unhealthy, see `errors` for more information"
 	}
-	json.NewEncoder(resp).Encode(healthcheck)
+	return writeJSON(resp, http.StatusOK, healthcheck)
 }

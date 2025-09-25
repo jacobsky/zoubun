@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -17,28 +16,21 @@ func (s *Services) Authorize(next http.Handler) http.Handler {
 		// If the key is valid, then serve the request
 		key := req.Header.Get("zoubun-api-key")
 		if key == "" {
-			resp.WriteHeader(401)
-			json.NewEncoder(resp).Encode(AuthorizationError{
-				Kind:    "Unauthorized",
-				Details: "No authorization header was found. Please ensure that the API key is included in the `zoubun-api-key` header",
-			})
+			// Unique case of ignoring because it is most _certainly_ a user error.
+			err := authenticationError("No authorization header was found. Please ensure that the API key is included in the `zoubun-api-key` header")
+			log.Printf("Auth Error: %v", err.Error())
 			return
 		}
-		// TODO: Plumb it into a DB query
+
 		id, err := s.queries.GetUserIdFromAuth(req.Context(), key)
 		if err != nil {
 			log.Printf("Database Error: %v", err)
-			resp.WriteHeader(500)
-			json.NewEncoder(resp).Encode(AuthorizationError{
-				Kind:    "Interal Authorization Error",
-				Details: "An error occurred when attempting to authorize your request.",
-			})
+			writeJSON(resp, http.StatusInternalServerError, internalServerError())
 			return
 		}
 
 		if !id.Valid {
-			resp.WriteHeader(403)
-			json.NewEncoder(resp).Encode(AuthorizationError{
+			writeJSON(resp, http.StatusForbidden, AuthorizationError{
 				Kind:    "Forbidden",
 				Details: "The `zoubun-api-key` header is invalid or incorrect",
 			})
