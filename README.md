@@ -26,24 +26,24 @@ Run `make devd` to delete the containers
 
 ## Features In Development
 
-- [ ] API
+- [x] API
     - [x] /count
     - [x] /increment
     - [x] /motd to display a message of the day
-    - [ ] /register
-    - [ ] /verification
+    - [x] /register
     - [x] /healthcheck
-    - [ ] etc...
 - [x] Containerized services
 - [x] Prometheus integration for metrics collection
 - [x] Grafana local service for observability dashboards
-- [ ] DB tasks
+- [x] DB tasks
     - [x] implement Schema
-    - [ ] API Key registration/management
+    - [x] API Key registration/management
     - [x] sqlc functions for each API request
     - [x] migration service
-- [ ] Dedicated CLI implementing the API methods
-- [ ] Hypermedia based counting visualization
+- [x] Dedicated CLI implementing the API methods
+- [ ] Improve error handling ergonomics in API and CLI
+- [ ] Improve logging (migrate to slog)
+- [ ] TUI frontend using bubbletea library
 - [ ] Configure Github actions to build the custom images and load them onto docker.
 - [ ] (Stretch goal) Add in simple email verification service to verify newly registered accounts
 - [ ] Make a companion repository to help facilitate deployment on a VPS

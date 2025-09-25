@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/big"
 	"net/http"
 	"strconv"
 
@@ -20,7 +19,7 @@ type ErrorResponse struct {
 }
 
 type Counter struct {
-	Count big.Int `json:"count"`
+	Count int64 `json:"count"`
 }
 
 type Motd struct {
@@ -76,6 +75,7 @@ func (s *Services) Count(resp http.ResponseWriter, req *http.Request) {
 		processError(resp, 500, "Internal Server Error", "")
 		return
 	}
+
 	id, err := strconv.Atoi(userid)
 	if err != nil {
 		log.Print(err)
@@ -83,7 +83,7 @@ func (s *Services) Count(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	currentCount, err := s.queries.GetUserCounter(req.Context(), int32(id))
+	count, err := s.queries.GetUserCounter(req.Context(), int32(id))
 	if err != nil {
 		log.Print(err)
 		resp.WriteHeader(500)
@@ -91,7 +91,7 @@ func (s *Services) Count(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	resp.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(resp).Encode(currentCount)
+	json.NewEncoder(resp).Encode(Counter{Count: count})
 }
 
 func (s *Services) Increment(resp http.ResponseWriter, req *http.Request) {
@@ -108,7 +108,7 @@ func (s *Services) Increment(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	currentCount, err := s.queries.IncrementCounter(req.Context(), int32(id))
+	count, err := s.queries.IncrementCounter(req.Context(), int32(id))
 	if err != nil {
 		log.Print(err)
 		resp.WriteHeader(500)
@@ -116,7 +116,7 @@ func (s *Services) Increment(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	resp.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(resp).Encode(currentCount)
+	json.NewEncoder(resp).Encode(Counter{Count: count})
 }
 
 type RegisterRequestBody struct {

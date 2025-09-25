@@ -4,7 +4,7 @@ FROM config
 WHERE config_key = 'motd';
 
 -- name: GetUserCounter :one
-SELECT current_count::bigint
+SELECT current_count::BIGINT
 FROM counters
 WHERE userid = sqlc.arg(userid)::int;
 
