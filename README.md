@@ -1,11 +1,12 @@
 # 増分ゲームAPI
 
 My first go project is a community incremental game that can be played using a
-commandline application. Includes both a Server with JSON RPC, Hypermedia App,
-and CLI (for power gamers).
+commandline application. Includes both a Server with JSON RPC, and a CLI for 
+interacting.
 
-This application is a little tongue in cheek, but should demonstrate my general
-understanding and learning of go.
+This application is a little tongue in cheek and is very much a "toy project"
+as the goal was to have something simple that exposed me to the top to bottom
+of a typical go application stack.
 
 ## How to run
 
@@ -23,8 +24,9 @@ POSTGRES_USER="user"
 Run `make devu` to spin up the containers locally
 Run `make devd` to delete the containers
 
+Can test using curl, the cli or the TUI to play.
 
-## Features In Development
+## Features for Learning Go
 
 - [x] API
     - [x] /count
@@ -41,9 +43,13 @@ Run `make devd` to delete the containers
     - [x] sqlc functions for each API request
     - [x] migration service
 - [x] Dedicated CLI implementing the API methods
-- [ ] Improve error handling ergonomics in API and CLI
+- [x] Improve error handling ergonomics in API and CLI
 - [ ] Improve logging (migrate to slog)
-- [ ] TUI frontend using bubbletea library
+- [x] TUI frontend using bubbletea library
 - [ ] Configure Github actions to build the custom images and load them onto docker.
-- [ ] (Stretch goal) Add in simple email verification service to verify newly registered accounts
 - [ ] Make a companion repository to help facilitate deployment on a VPS
+
+## Potential Improvements for Further Learning
+- [ ] Rate Limiting
+- [ ] Request Logging Beyond Telemetry
+- [ ] Flesh out the TUI functionality

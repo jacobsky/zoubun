@@ -20,3 +20,5 @@ devd:
 
 prod:
 	docker-compose up --build
+tui:
+	go run ./cmd/cli tui
